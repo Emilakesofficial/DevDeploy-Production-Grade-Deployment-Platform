@@ -57,27 +57,26 @@ jobs:
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}"
           } > .env
 
-      - name: Write SSH private key
+      - name: Debug SSH key secret
         run: |
-          mkdir -p ~/.ssh
-          cat > ~/.ssh/id_ed25519 << 'EOT'
-          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          EOT
-          chmod 600 ~/.ssh/id_ed25519
-
-          echo "=== Validating SSH key ==="
-          if [ ! -s ~/.ssh/id_ed25519 ]; then
-            echo "❌ Key file is empty"
+          KEY="${{ secrets.EC2_SSH_PRIVATE_KEY }}"
+          echo "Secret length: ${#KEY}"
+          if [ ${#KEY} -lt 200 ]; then
+            echo "❌ Secret looks too short or empty"
             exit 1
           fi
+          echo "✅ Secret has reasonable length"
 
-          if head -c 30 ~/.ssh/id_ed25519 | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
-            echo "✅ Key written and looks valid"
-          else
-            echo "❌ Key does not look valid"
-            head -c 100 ~/.ssh/id_ed25519 | cat -A
-            exit 1
-          fi
+      - name: Prepare target directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /opt/devdeploy
+            sudo chown -R ec2-user:ec2-user /opt/devdeploy
+            echo "Directory prepared"
 
       - name: Prepare target directory on EC2
         uses: appleboy/ssh-action@v1.0.3
