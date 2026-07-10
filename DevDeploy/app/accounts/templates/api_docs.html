@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Auth Service - API Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background-color: #5568d3;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .post { background: #49cc90; color: white; }
+        .get { background: #61affe; color: white; }
+        .put { background: #fca130; color: white; }
+        .delete { background: #f93e3e; color: white; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Financial Auth Service</h1>
+        <p>Production-grade authentication microservice for financial systems</p>
+    </div>
+
+    <div class="card">
+        <h2>📚 API Documentation</h2>
+        <p>Choose your preferred documentation format:</p>
+        <a href="/api/docs/" class="btn">Swagger UI</a>
+        <a href="/api/redoc/" class="btn">ReDoc</a>
+        <a href="/api/schema/" class="btn">OpenAPI Schema (JSON)</a>
+    </div>
+
+    <div class="card">
+        <h2>🚀 Quick Start</h2>
+        <h3>1. Register a User</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/register/</code>
+        </div>
+        <pre>{
+  "email": "user@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "password": "SecurePass123!",
+  "password_confirm": "SecurePass123!"
+}</pre>
+
+        <h3>2. Verify Email</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/verify-email/</code>
+        </div>
+        <pre>{
+  "token": "verification-token-from-email"
+}</pre>
+
+        <h3>3. Login</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/login/</code>
+        </div>
+        <pre>{
+  "email": "user@example.com",
+  "password": "SecurePass123!"
+}</pre>
+
+        <h3>4. Use Access Token</h3>
+        <p>Include the access token in the Authorization header:</p>
+        <pre>Authorization: Bearer &lt;your-access-token&gt;</pre>
+    </div>
+
+    <div class="card">
+        <h2>📋 Available Endpoints</h2>
+        
+        <h3>Authentication</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/login/</code> - User login
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/logout/</code> - User logout
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/refresh/</code> - Refresh access token
+        </div>
+
+        <h3>Registration</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/register/</code> - Register new user
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/verify-email/</code> - Verify email address
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/resend-verification/</code> - Resend verification email
+        </div>
+
+        <h3>Password Management</h3>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/forgot-password/</code> - Request password reset
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/reset-password/</code> - Reset password with token
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/change-password/</code> - Change password (authenticated)
+        </div>
+
+        <h3>Profile</h3>
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/auth/me/</code> - Get user profile
+        </div>
+        <div class="endpoint">
+            <span class="method put">PUT</span>
+            <code>/api/auth/profile/</code> - Update profile
+        </div>
+        <div class="endpoint">
+            <span class="method delete">DELETE</span>
+            <code>/api/auth/account/</code> - Delete account
+        </div>
+
+        <h3>Sessions</h3>
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/auth/sessions/</code> - View active sessions
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/revoke-session/</code> - Revoke specific session
+        </div>
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/auth/revoke-all-sessions/</code> - Revoke all other sessions
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔒 Security Features</h2>
+        <ul>
+            <li><strong>Password Hashing:</strong> Argon2 algorithm</li>
+            <li><strong>Rate Limiting:</strong> 5 failed login attempts = 15 minute lockout</li>
+            <li><strong>Token Rotation:</strong> Refresh tokens are rotated on each use</li>
+            <li><strong>Session Management:</strong> View and revoke active sessions</li>
+            <li><strong>Audit Logging:</strong> All authentication events are logged</li>
+            <li><strong>Email Verification:</strong> Required before account activation</li>
+            <li><strong>Suspicious Activity Detection:</strong> Alerts for new IP/device logins</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>⚡ Rate Limits</h2>
+        <ul>
+            <li><strong>Login:</strong> 5 attempts per 15 minutes per email</li>
+            <li><strong>Password Reset:</strong> 3 requests per hour per email</li>
+            <li><strong>Verification Resend:</strong> 3 requests per hour per email</li>
+            <li><strong>Global API:</strong> 60 requests per minute per IP</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>🎯 Token Lifetimes</h2>
+        <ul>
+            <li><strong>Access Token:</strong> 15 minutes</li>
+            <li><strong>Refresh Token:</strong> 7 days</li>
+            <li><strong>Email Verification:</strong> 24 hours</li>
+            <li><strong>Password Reset:</strong> 1 hour</li>
+        </ul>
+    </div>
+</body>
+</html>

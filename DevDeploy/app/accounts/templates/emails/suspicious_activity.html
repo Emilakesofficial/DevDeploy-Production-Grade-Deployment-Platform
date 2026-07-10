@@ -1,0 +1,19 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<h2>⚠️ Security Alert</h2>
+<div class="alert">
+    <p><strong>We detected unusual activity on your account.</strong></p>
+</div>
+<p>Hello {{ user.get_full_name }},</p>
+<p>We detected a login to your account from a new location or device:</p>
+<ul>
+    <li><strong>IP Address:</strong> {{ ip_address }}</li>
+    <li><strong>Time:</strong> {{ timestamp }}</li>
+    <li><strong>Device:</strong> {{ device_info }}</li>
+    <li><strong>Reason:</strong> {{ reason }}</li>
+</ul>
+<p><strong>If this was you:</strong> You can safely ignore this email.</p>
+<p><strong>If this wasn't you:</strong> Please change your password immediately and contact our support team.</p>
+<p>Best regards,<br>The Financial Auth Team</p>
+{% endblock %}
