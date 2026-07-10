@@ -86,6 +86,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             cd /opt/devdeploy
+            sed -i 's/\r$//' scripts/deploy.sh scripts/healthcheck.sh .env docker-compose.prod.yml || true
             chmod +x scripts/deploy.sh scripts/healthcheck.sh
             ./scripts/deploy.sh
 
