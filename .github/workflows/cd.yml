@@ -57,6 +57,17 @@ jobs:
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}"
           } > .env
 
+      - name: Setup SSH private key
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "SSH key written"
+          head -c 40 ~/.ssh/id_ed25519
+          echo "..."
+
       - name: Prepare target directory on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -68,22 +79,22 @@ jobs:
             sudo chown -R ec2-user:ec2-user /opt/devdeploy
             echo "Directory prepared"
 
-      - name: Deploy files to EC2
+      - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ~/.ssh/id_ed25519
           source: ".,.env,docker-compose.prod.yml,scripts/,app/"
           target: /opt/devdeploy
           strip_components: 0
 
-      - name: Execute deployment on EC2
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ~/.ssh/id_ed25519
           script: |
             cd /opt/devdeploy
             chmod +x scripts/deploy.sh scripts/healthcheck.sh
@@ -94,7 +105,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ~/.ssh/id_ed25519
           script: |
             cd /opt/devdeploy
             ./scripts/healthcheck.sh
