@@ -57,23 +57,34 @@ jobs:
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}"
           } > .env
 
-      - name: Setup SSH private key
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+      - name: Write SSH private key
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          cat > ~/.ssh/id_ed25519 << 'EOT'
+          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          EOT
           chmod 600 ~/.ssh/id_ed25519
-          echo "SSH key written"
-          head -c 40 ~/.ssh/id_ed25519
-          echo "..."
+
+          echo "=== Validating SSH key ==="
+          if [ ! -s ~/.ssh/id_ed25519 ]; then
+            echo "❌ Key file is empty"
+            exit 1
+          fi
+
+          if head -c 30 ~/.ssh/id_ed25519 | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            echo "✅ Key written and looks valid"
+          else
+            echo "❌ Key does not look valid"
+            head -c 100 ~/.ssh/id_ed25519 | cat -A
+            exit 1
+          fi
 
       - name: Prepare target directory on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ~/.ssh/id_ed25519
           script: |
             sudo mkdir -p /opt/devdeploy
             sudo chown -R ec2-user:ec2-user /opt/devdeploy
