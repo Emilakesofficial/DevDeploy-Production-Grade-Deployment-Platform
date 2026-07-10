@@ -78,7 +78,7 @@ jobs:
           target: /opt/devdeploy
           strip_components: 0
 
-      - name: Deploy on EC2
+      - name: Deploy on EC2 (aggressive normalization)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -86,8 +86,18 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             cd /opt/devdeploy
-            sed -i 's/\r$//' scripts/deploy.sh scripts/healthcheck.sh .env docker-compose.prod.yml || true
+
+            echo "=== Fixing line endings (CRLF → LF) ==="
+            # Very aggressive normalization
+            find . -type f \( -name "*.sh" -o -name ".env" -o -name "docker-compose.prod.yml" \) -exec sed -i 's/\r$//' {} + 2>/dev/null || true
+
+            # Also try dos2unix if available
+            command -v dos2unix >/dev/null && find . -type f \( -name "*.sh" -o -name ".env" -o -name "docker-compose.prod.yml" \) -exec dos2unix {} + 2>/dev/null || true
+
+            echo "=== Making scripts executable ==="
             chmod +x scripts/deploy.sh scripts/healthcheck.sh
+
+            echo "=== Running deploy.sh ==="
             ./scripts/deploy.sh
 
       - name: Run health check
