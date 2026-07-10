@@ -57,6 +57,17 @@ jobs:
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}"
           } > .env
 
+      - name: Prepare target directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /opt/devdeploy
+            sudo chown -R ec2-user:ec2-user /opt/devdeploy
+            echo "Directory prepared"
+
       - name: Deploy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
