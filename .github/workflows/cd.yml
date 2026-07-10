@@ -57,16 +57,6 @@ jobs:
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}"
           } > .env
 
-      - name: Debug SSH key secret
-        run: |
-          KEY="${{ secrets.EC2_SSH_PRIVATE_KEY }}"
-          echo "Secret length: ${#KEY}"
-          if [ ${#KEY} -lt 200 ]; then
-            echo "❌ Secret looks too short or empty"
-            exit 1
-          fi
-          echo "✅ Secret has reasonable length"
-
       - name: Prepare target directory on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -78,23 +68,12 @@ jobs:
             sudo chown -R ec2-user:ec2-user /opt/devdeploy
             echo "Directory prepared"
 
-      - name: Prepare target directory on EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ~/.ssh/id_ed25519
-          script: |
-            sudo mkdir -p /opt/devdeploy
-            sudo chown -R ec2-user:ec2-user /opt/devdeploy
-            echo "Directory prepared"
-
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ~/.ssh/id_ed25519
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: ".,.env,docker-compose.prod.yml,scripts/,app/"
           target: /opt/devdeploy
           strip_components: 0
@@ -104,18 +83,18 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ~/.ssh/id_ed25519
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             cd /opt/devdeploy
             chmod +x scripts/deploy.sh scripts/healthcheck.sh
             ./scripts/deploy.sh
 
-      - name: Verify deployment health
+      - name: Run health check
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ~/.ssh/id_ed25519
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             cd /opt/devdeploy
             ./scripts/healthcheck.sh
