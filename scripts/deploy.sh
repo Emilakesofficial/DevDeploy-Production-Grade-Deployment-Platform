@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+# Fix its own line endings immediately (defensive)
+if [ -f "$0" ]; then
+  tr -d '\r' < "$0" > "${0}.clean" 2>/dev/null && mv "${0}.clean" "$0" || true
+fi
+
+
 # This script is designed to be run on the EC2 instance.
 # It is typically called by GitHub Actions CD workflow.
 
