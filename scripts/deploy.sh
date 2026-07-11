@@ -6,7 +6,6 @@ if [ -f "$0" ]; then
   tr -d '\r' < "$0" > "${0}.clean" 2>/dev/null && mv "${0}.clean" "$0" || true
 fi
 
-
 # This script is designed to be run on the EC2 instance.
 # It is typically called by GitHub Actions CD workflow.
 
@@ -40,7 +39,7 @@ echo " - Application directory: $APP_DIR"
 
 # Ensure we're in the correct directory
 
-if [! -d "$APP_DIR" ]; then
+if [ ! -d "$APP_DIR" ]; then
     echo " Creating application directory: $APP_DIR"
     sudo mkdir -p "$APP_DIR"
     sudo chown -R "$USER":"$USER" "$APP_DIR" 2>/dev/null || true
