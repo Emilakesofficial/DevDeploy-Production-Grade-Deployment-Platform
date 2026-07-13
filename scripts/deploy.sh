@@ -19,28 +19,9 @@ echo "DevDeploy - Production application Deployment..."
 echo "Started at $(date)"
 echo "===================================="
 
-# Pre flight checks
-if [ ! -f "$ENV_FILE" ]; then
-    echo "Error: Environment file '$ENV_FILE' not found."
-    echo "Please ensure the runtime environment file is present."
-    exit 1
-fi
-
-if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
-    echo "Error: Docker Compose file '$DOCKER_COMPOSE_FILE' not found."
-    echo "Please ensure the Docker Compose file is in the current directory."
-    exit 1
-fi
-
-echo " Pre-flight checks passed. Proceeding with deployment..."
-echo " - Using compose file: $DOCKER_COMPOSE_FILE"
-echo " - Environment file: $ENV_FILE"
-echo " - Application directory: $APP_DIR"
-
-# Ensure we're in the correct directory
-
+# Ensure application directory exists
 if [ ! -d "$APP_DIR" ]; then
-    echo " Creating application directory: $APP_DIR"
+    echo "Creating application directory: $APP_DIR"
     sudo mkdir -p "$APP_DIR"
     sudo chown -R "$USER":"$USER" "$APP_DIR" 2>/dev/null || true
 fi
@@ -50,42 +31,74 @@ cd "$APP_DIR" || {
     exit 1
 }
 
-# Copy latest compose and nginx config (if running from CI)
-# Load environment variables
+# Pre-flight checks
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: Environment file '$ENV_FILE' not found."
+    exit 1
+fi
 
-echo "Loading environment variables from $ENV_FILE..."
-set -a 
-source "$ENV_FILE"
-set +a
+if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
+    echo "Error: Docker Compose file '$DOCKER_COMPOSE_FILE' not found."
+    exit 1
+fi
 
-# pull / Build the latest images
-echo "Pulling the latest Docker images..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" pull --quiet || true
-docker-compose -f "$DOCKER_COMPOSE_FILE" build --pull
+echo "Pre-flight checks passed."
+echo "Using compose file: $DOCKER_COMPOSE_FILE"
+echo "Using environment file: $ENV_FILE"
+echo "Application directory: $APP_DIR"
 
-# Deploy Services
-echo "Starting / updating services..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans
+# Pull / Build latest images
+echo "Pulling latest Docker images..."
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    pull --quiet || true
 
-# Run Django Management Commands
-echo "Running Django migrations..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py migrate --no-input
+echo "Building latest Docker images..."
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    build --pull
+
+# Deploy services
+echo "Starting/updating services..."
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    up -d --remove-orphans
+
+# Run Django management commands
+echo "Running database migrations..."
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    exec -T web python manage.py migrate --no-input
 
 echo "Collecting static files..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py collectstatic --no-input --clear
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    exec -T web python manage.py collectstatic --no-input --clear
 
-# Restart Services (ensures clean state)
-echo "Restarting services to ensure a clean state..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" restart web celery_worker celery_beat
+# Restart services to ensure clean state
+echo "Restarting application services..."
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$DOCKER_COMPOSE_FILE" \
+    restart web celery_worker celery_beat
 
-# Health Check
-echo "Performing health check on the web service..."
-if [ -f "./scripts/health_check.sh" ]; then
-    ./scripts/health_check.sh
+# Health check
+echo "Performing health check..."
+if [ -f "./scripts/healthcheck.sh" ]; then
+    chmod +x ./scripts/healthcheck.sh
+    ./scripts/healthcheck.sh
 else
-    echo "Warning: Health check script not found. Skipping health check."
+    echo "Warning: healthcheck.sh not found. Skipping health check."
     sleep 5
-    docker-compose -f "$DOCKER_COMPOSE_FILE" ps
+    docker compose \
+        --env-file "$ENV_FILE" \
+        -f "$DOCKER_COMPOSE_FILE" \
+        ps
 fi
 
 # Cleanup
