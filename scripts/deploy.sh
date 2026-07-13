@@ -46,22 +46,22 @@ echo "Application directory: $APP_DIR"
 
 # docker-compose automatically loads .env from current directory
 echo "Pulling latest Docker images..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" pull --quiet || true
+docker compose -f "$DOCKER_COMPOSE_FILE" pull --quiet || true
 
 echo "Building latest Docker images..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" build --pull
+docker compose -f "$DOCKER_COMPOSE_FILE" build --pull
 
 echo "Starting/updating services..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans
+docker compose -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans
 
 echo "Running database migrations..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py migrate --no-input
+docker compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py migrate --no-input
 
 echo "Collecting static files..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py collectstatic --no-input --clear
+docker compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py collectstatic --no-input --clear
 
 echo "Restarting application services..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" restart web celery_worker celery_beat
+docker compose -f "$DOCKER_COMPOSE_FILE" restart web celery_worker celery_beat
 
 echo "Performing health check..."
 if [ -f "./scripts/healthcheck.sh" ]; then
@@ -70,7 +70,7 @@ if [ -f "./scripts/healthcheck.sh" ]; then
 else
     echo "Warning: healthcheck.sh not found. Skipping health check."
     sleep 5
-    docker-compose -f "$DOCKER_COMPOSE_FILE" ps
+    docker compose -f "$DOCKER_COMPOSE_FILE" ps
 fi
 
 echo "Cleaning up unused Docker resources..."
