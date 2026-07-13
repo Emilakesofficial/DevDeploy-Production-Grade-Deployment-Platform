@@ -49,40 +49,40 @@ echo "Application directory: $APP_DIR"
 
 # Pull / Build latest images
 echo "Pulling latest Docker images..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     pull --quiet || true
 
 echo "Building latest Docker images..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     build --pull
 
 # Deploy services
 echo "Starting/updating services..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     up -d --remove-orphans
 
 # Run Django management commands
 echo "Running database migrations..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     exec -T web python manage.py migrate --no-input
 
 echo "Collecting static files..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     exec -T web python manage.py collectstatic --no-input --clear
 
 # Restart services to ensure clean state
 echo "Restarting application services..."
-docker compose \
+docker-compose \
     --env-file "$ENV_FILE" \
     -f "$DOCKER_COMPOSE_FILE" \
     restart web celery_worker celery_beat
@@ -95,7 +95,7 @@ if [ -f "./scripts/healthcheck.sh" ]; then
 else
     echo "Warning: healthcheck.sh not found. Skipping health check."
     sleep 5
-    docker compose \
+    docker-compose \
         --env-file "$ENV_FILE" \
         -f "$DOCKER_COMPOSE_FILE" \
         ps
@@ -103,7 +103,7 @@ fi
 
 # Cleanup
 echo "Cleaning up unused Docker resources..."
-docker system prune -f --volumes || true
+docker-compose system prune -f --volumes || true
 
 echo ""
 echo "===================================="
