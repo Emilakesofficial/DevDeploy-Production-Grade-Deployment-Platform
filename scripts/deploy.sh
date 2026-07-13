@@ -6,9 +6,6 @@ if [ -f "$0" ]; then
   tr -d '\r' < "$0" > "${0}.clean" 2>/dev/null && mv "${0}.clean" "$0" || true
 fi
 
-# This script is designed to be run on the EC2 instance.
-# It is typically called by GitHub Actions CD workflow.
-
 APP_DIR="${APP_DIR:-/opt/devdeploy}"
 DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE_FILE:-docker-compose.prod.yml}"
 ENV_FILE="${ENV_FILE:-.env}"
@@ -47,47 +44,25 @@ echo "Using compose file: $DOCKER_COMPOSE_FILE"
 echo "Using environment file: $ENV_FILE"
 echo "Application directory: $APP_DIR"
 
-# Pull / Build latest images
+# docker-compose automatically loads .env from current directory
 echo "Pulling latest Docker images..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    pull --quiet || true
+docker-compose -f "$DOCKER_COMPOSE_FILE" pull --quiet || true
 
 echo "Building latest Docker images..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    build --pull
+docker-compose -f "$DOCKER_COMPOSE_FILE" build --pull
 
-# Deploy services
 echo "Starting/updating services..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    up -d --remove-orphans
+docker-compose -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans
 
-# Run Django management commands
 echo "Running database migrations..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    exec -T web python manage.py migrate --no-input
+docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py migrate --no-input
 
 echo "Collecting static files..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    exec -T web python manage.py collectstatic --no-input --clear
+docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T web python manage.py collectstatic --no-input --clear
 
-# Restart services to ensure clean state
 echo "Restarting application services..."
-docker compose \
-    --env-file "$ENV_FILE" \
-    -f "$DOCKER_COMPOSE_FILE" \
-    restart web celery_worker celery_beat
+docker-compose -f "$DOCKER_COMPOSE_FILE" restart web celery_worker celery_beat
 
-# Health check
 echo "Performing health check..."
 if [ -f "./scripts/healthcheck.sh" ]; then
     chmod +x ./scripts/healthcheck.sh
@@ -95,15 +70,11 @@ if [ -f "./scripts/healthcheck.sh" ]; then
 else
     echo "Warning: healthcheck.sh not found. Skipping health check."
     sleep 5
-    docker compose \
-        --env-file "$ENV_FILE" \
-        -f "$DOCKER_COMPOSE_FILE" \
-        ps
+    docker-compose -f "$DOCKER_COMPOSE_FILE" ps
 fi
 
-# Cleanup
 echo "Cleaning up unused Docker resources..."
-docker compose system prune -f --volumes || true
+docker system prune -f --volumes || true
 
 echo ""
 echo "===================================="
