@@ -49,7 +49,7 @@ echo "Pulling latest Docker images..."
 docker compose -f "$DOCKER_COMPOSE_FILE" pull --quiet || true
 
 echo "Building latest Docker images..."
-docker compose -f "$DOCKER_COMPOSE_FILE" build --pull
+docker compose -f "$DOCKER_COMPOSE_FILE" build
 
 echo "Starting/updating services..."
 docker compose -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans
